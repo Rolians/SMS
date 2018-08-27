@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="jumbotron">
+            <h2>Hello {{ user.get_username }}</h2>
+            <div id="reports" title="View and Generate Excel/PDF Reports">
+          <div class="container">
+            <h3 class="text-center">Attendance Report</h3>
+                <div class="row">
+                    <div class="col-md-5" id="leftColumn">
+                        <form>
+                            <div class="form-group">
+                            <input class="form-control" type="date" name="start_date" id="start_date" value="{{start_date|date:"d/m/Y"}}">
+                            <span class="label label-default">Start Date</span>
+                          </div>
+                          </form>
+                    </div>
+                    <div class="col-md-5" id="rightColumn">
+                        <form>
+                            <div class="form-group">
+                              <input class="form-control" type="date" name="end_date" id="end_date" value="{{end_date|date:"d/m/Y"}}">
+                              <span class="label label-default">End Date</span>
+                            </div>
+                        </form>
+                    </div>
+
+                    <div class="col-md-2" id="buttonReport">
+                      <p class="text-center"><button class="btn btn-success btn-sm" type="generate_report" id="showAttendance" onclick="showAttendance()">View Attendance</button>
+                      </p>
+                    </div>
+                </div>
+                <header></header>
+            </div>
+          <!--Table container-->
+          <div class="container" id="attendanceTableContainer">
+            <h4 id="attendance_header"></h4>
+            <div class="table-responsive">
+              <table class="table table-bordered table-hover" id="attendance_table">
+              </table>
+            </div>
+          </div>
+
+    </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+
+
+<script>
+{% if not user.is_authenticated %}
+$("ul.nav.navbar-nav.navbar-right").css("display","none");
+{% endif %}
+
+function showAttendance(){
+        var username = "{{ user.get_username }}";
+        var start_date = $("#start_date").val();
+        var end_date = $("#end_date").val();
+        console.log("username.:"+username);
+        console.log("start_date.:"+start_date);
+        console.log("end_date.:"+end_date);
+
+        // var csrftoken = getCookie('csrftoken');
+        // console.log(csrftoken)
+        $.ajax({
+               type: "GET",
+               url: "/attendanceapi/",
+               data: {"student_name": username ,"start_date" : start_date+'T00:00:00Z' , "end_date" : end_date+'T23:59:59Z'},
+               success: function(json){
+                 console.log(json);
+                         $("#attendance_table tr").remove();
+                 $('#attendance_header').html('Daily Attendance Report from '+start_date+' to '+end_date);
+                 $('#attendance_table').html('<thead class="well"><tr><th>Date</th><th>status</th><th>Subject Name</th><th>Teacher Name</th></tr></thead>');
+
+
+                 $.each(json, function (i, row) {
+
+                   console.log("Hello"+row.student_first_name);
+                        $('#attendance_table').append('<tr><td><b>'+row.date+'</b></td><td>'+row.status+'</td><td>'+row.subject_name+'</td><td>'+row.teacher_first_name+'</td></tr>');
+
+                  });
+               }//success end
+
+             });//ajax end
+    }
+</script>
+
+{% endblock %}

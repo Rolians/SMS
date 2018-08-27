@@ -1,0 +1,94 @@
+{% extends 'base.html' %}
+
+{% block content %}
+
+<div class="container">
+    <div class="row">
+        <div class="jumbotron">
+            <h2>Hello {{ user.get_username }}</h2>
+              <div id="exam_marks" title="View and Generate Exam Marks">
+                <div class="container">
+                  <h3 class="text-center">Exam Marks</h3>
+                      <div class="row">
+                          <div class="col-md-5" id="leftColumn">
+                            <form>
+                              <div class="form-group"><select class="form-control" name="title" id="title">
+                                <option value="EndSem">EndSem</option>
+                                <option value="MidSem">MidSem</option>
+                              </select>
+                            </div>
+                          </form>
+                          </div>
+                          <div class="col-md-5" id="rightColumn">
+                            <form>
+                            <div class="form-group"><select class="form-control" name="year" id="year">
+                              <option value="FY">FY</option>
+                              <option value="SY">SY</option>
+                              <option value="TY">TY</option>
+                            </select>
+                          </div>
+                        </form>
+                          </div>
+                          <div class="col-md-2" id="buttonReport">
+                            <p class="text-center"><button class="btn btn-success btn-sm" type="showExamMarks" id="showExamMarks" onclick="showExamMarks()">Show Marks</button>
+                            </p>
+                          </div>
+                      </div>
+                      <header></header>
+                  </div>
+                  <!--Table container-->
+                  <div class="container" id="examMarksTableContainer">
+                    <h4 id="examMarks_header"></h4>
+                    <div class="table-responsive">
+                      <table class="table table-bordered table-hover" id="examMarks_table">
+                      </table>
+                    </div>
+                  </div>
+
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block javascript %}
+
+
+<script>
+{% if not user.is_authenticated %}
+$("ul.nav.navbar-nav.navbar-right").css("display","none");
+{% endif %}
+
+function showExamMarks(){
+        var username = "{{ user.get_username }}";
+        var title = $("#title").val();
+        var year = $("#year").val();
+        console.log("username.:"+username);
+        console.log("title.:"+title);
+        console.log("year.:"+year);
+
+        // var csrftoken = getCookie('csrftoken');
+        // console.log(csrftoken)
+        $.ajax({
+               type: "GET",
+               url: "/marks/",
+               data: {"student_name": username ,"title" : title , "year" : year},
+               success: function(json){
+                 console.log(json);
+                 $("#examMarks_table tr").remove();
+                 $('#examMarks_header').html('Subject wise Marks for '+title);
+                 $('#examMarks_table').html('<thead class="well"><tr><th>Subject</th><th>Marks</th><th>Date</th></tr></thead>');
+
+
+                 $.each(json, function (i, row) {
+
+                   console.log("Hello"+row.student_first_name);
+                        $('#examMarks_table').append('<tr><td><b>'+row.subject_name+'</b></td><td>'+row.marks+'</td><td>'+row.exam_date+'</td></tr>');
+
+                  });
+               }//success end
+
+             });//ajax end
+    }
+</script>
+
+{% endblock %}
